@@ -72,6 +72,12 @@ The frontend provides the chat interface.
 3. Click the **Play Icon** next to any message (e.g., Rahul's message).
 4. The system will detect the language, generate audio, and play it back with the correct accent.
 
+### CarPlay Prototype
+
+To view the experimental in-car interface:
+1. Navigate to `http://localhost:3000/carplay`.
+2. Click the notification banner ("Bhai, kaha pohcha?") to trigger the hands-free audio playback.
+
 ## Project Structure
 
 - **backend/**: Contains the Python FastAPI server and AI logic.
