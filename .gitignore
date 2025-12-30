@@ -25,3 +25,5 @@ env/
 # IDEs
 .vscode/
 .idea/
+*.mp3
+ffmpeg-*/
