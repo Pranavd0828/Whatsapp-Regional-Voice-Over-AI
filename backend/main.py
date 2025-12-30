@@ -1,23 +1,39 @@
-import os
-import io
-import requests
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-import google.generativeai as genai
+from fastapi.responses import StreamingResponse
+import os
+import io
+import json
+import requests
 from dotenv import load_dotenv
 
-# Load environment variables
+# ---------------------------------------------------------
+# 1. SETUP & CONFIGURATION
+# ---------------------------------------------------------
 load_dotenv()
+
+# API Keys
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+CARTESIA_API_KEY = os.getenv("CARTESIA_API_KEY")
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+
+# Initialize Cartesia
+from cartesia import Cartesia
+client = Cartesia(api_key=CARTESIA_API_KEY)
+
+# Initialize Gemini
+try:
+    import google.generativeai as genai
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+except ImportError:
+    print("Gemini SDK not found or configured correctly.")
+    model = None
 
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"status": "ok", "message": "Smart Audio Backend (Gemini + ElevenLabs) is running"}
-
-# Enable CORS
+# Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,115 +42,129 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize Gemini
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
-    print("WARNING: GEMINI_API_KEY not found in .env")
+# ---------------------------------------------------------
+# 2. VOICE MAPPING
+# ---------------------------------------------------------
+# Cartesia (Indian/Hinglish)
+CARTESIA_VOICE_MAP = {
+    "Rahul": "791d5162-d5eb-40f0-8189-f19db44611d8",   # Ayush (Male)
+    "You": "791d5162-d5eb-40f0-8189-f19db44611d8",     # Ayush (Male)
+    "Sneha": "9cebb910-d4b7-4a4a-85a4-12c79137724c",   # Aarti (Female)
+}
 
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
-
-# Initialize ElevenLabs
-ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+# ElevenLabs (English Only) - Fallback/Premium English
+ELEVENLABS_VOICE_MAP = {
+    "Rahul": "k7nOSUCadIEwB6fdJmbw",   # User ID 1 (Male)
+    "You": "Uyx98Ek4uMNmWN7E28CD",     # User ID 3 
+    "Sneha": "1qEiC6qsybMkmnNdVMbK",   # User ID 1 (Female)
+}
 
 class AudioRequest(BaseModel):
     text: str
     sender: str
 
-# SENDER_VOICE_MAP: Maps specific characters to distinct VOICES (VERIFIED IDs)
-# User Provided Native Indian Web/Voice Lab IDs
-SENDER_VOICE_MAP = {
-    # Men (Hindi/Regional)
-    "Rahul": "k7nOSUCadIEwB6fdJmbw",   # User ID 1
-    "You": "Uyx98Ek4uMNmWN7E28CD",     # User ID 3 (Default You)
+# ---------------------------------------------------------
+# 3. HELPER FUNCTIONS
+# ---------------------------------------------------------
 
-    # Women (English/Regional)
-    "Sneha": "1qEiC6qsybMkmnNdVMbK",   # User ID 1 (Female)
-}
+async def generate_elevenlabs_audio(text: str, sender: str):
+    """
+    Generates audio using ElevenLabs (Best for Pure English)
+    """
+    voice_id = ELEVENLABS_VOICE_MAP.get(sender, "JBFqnCBsd6RMkjVDRZzb")
+    print(f"Routing to ElevenLabs | Voice: {voice_id} | Text: {text}")
+    
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+    headers = {
+        "Accept": "audio/mpeg",
+        "Content-Type": "application/json",
+        "xi-api-key": ELEVENLABS_API_KEY
+    }
+    data = {
+        "text": text,
+        "model_id": "eleven_multilingual_v2",
+        "voice_settings": {"stability": 0.5, "similarity_boost": 0.75}
+    }
+    
+    response = requests.post(url, json=data, headers=headers)
+    if response.status_code != 200:
+        raise Exception(f"ElevenLabs Error: {response.text}")
+        
+    return StreamingResponse(io.BytesIO(response.content), media_type="audio/mpeg")
+
+async def generate_cartesia_audio(text: str, sender: str):
+    """
+    Generates audio using Cartesia Sonic (Best for Hindi/Hinglish/Code-Switching)
+    """
+    voice_id = CARTESIA_VOICE_MAP.get(sender, "791d5162-d5eb-40f0-8189-f19db44611d8")
+    print(f"Routing to Cartesia | Voice: {voice_id} | Text: {text}")
+    
+    audio_generator = client.tts.bytes(
+        model_id="sonic-multilingual",
+        transcript=text,
+        voice={"mode": "id", "id": voice_id},
+        output_format={"container": "mp3", "bit_rate": 128000, "sample_rate": 44100},
+    )
+    return StreamingResponse(audio_generator, media_type="audio/mpeg")
+
+# ---------------------------------------------------------
+# 4. MAIN ENDPOINT
+# ---------------------------------------------------------
 
 @app.post("/generate-audio")
 async def generate_audio(request: AudioRequest):
-    """
-    1. Detect dialect AND Transliterate using Google Gemini.
-    2. Generate Audio using ElevenLabs (Multilingual v2) with Sender-Specific Voice.
-    """
     text = request.text
     sender = request.sender
     print(f"Received text from {sender}: {text}")
 
     # 1. Detect Dialect & Transliterate via Gemini
+    native_text = text
+    detected_dialect = "english" # Default
+    
     try:
-        response = model.generate_content(
-            f"""
-            You are a linguistic expert specializing in Indian languages.
-            
-            1. Identify the language/dialect of this text: "{text}"
-            2. Transliterate the text into its NATIVE SCRIPT (e.g., Hindi -> Devanagari).
-            
-            CRITICAL RULE FOR PRONUNCIATION:
-            For English words mixed in the sentence (like 'done', 'scene', 'late'), TRANSLITERATE THEM PHONETICALLY into the native script.
-            
-            SPECIFIC OVERRIDES:
-            - "Done" -> "डन" (Short 'a' sound, NOT 'दून' or 'डोन')
-            - "Scene" -> "सीन"
-            - "Project" -> "प्रोजेक्ट"
-            
-            Example: "Sahi hai, done karte hain." -> "सही है, डन करते हैं।"
-            Example: "Main late ho gaya." -> "मैं लेट हो गया।"
-            
-            Return the result in strict JSON format:
-            {{
-                "dialect": "one of [hindi, marathi, gujarati, tamil, telugu, malayalam, punjabi, bengali, kannada, english]",
-                "native_text": "the fully transliterated text"
-            }}
-            """
-        )
-        clean_text = response.text.replace("```json", "").replace("```", "").strip()
-        import json
-        data = json.loads(clean_text)
-        
-        detected_dialect = data.get("dialect", "english").lower()
-        native_text = data.get("native_text", text)
-        print(f"Detected: {detected_dialect}, Native Script: {native_text}")
-             
+        if model:
+            response = model.generate_content(
+                f"""
+                You are a linguistic expert specializing in Indian languages.
+                
+                1. Identify the language/dialect of this text: "{text}"
+                2. Transliterate Hindi/Indic text into its NATIVE SCRIPT (Devanagari).
+                
+                CRITICAL RULE FOR PRONUNCIATION (CODE-SWITCHING):
+                - If a word is English (e.g., 'Done', 'Scene', 'Late', 'Bro'), KEEP IT IN LATIN SCRIPT.
+                - Do NOT transliterate English words to Devanagari.
+                - Only transliterate the Hindi words.
+                
+                Example: "Sahi hai, done karte hain." -> "सही है, Done करते हैं।"
+                Example: "Main late ho gaya." -> "मैं Late हो गया।"
+                
+                Return JSON:
+                {{
+                    "dialect": "hindi or english or hinglish",
+                    "native_text": "the mixed script text"
+                }}
+                """
+            )
+            cleaned = response.text.replace('```json', '').replace('```', '')
+            data = json.loads(cleaned)
+            native_text = data.get("native_text", text)
+            detected_dialect = data.get("dialect", "english").lower()
+            print(f"Gemini: {data}")
     except Exception as e:
-        print(f"Error in dialect detection/transliteration: {e}")
-        detected_dialect = "english"
-        native_text = text
+        print(f"Gemini Error: {e}")
 
-    # 2. Select Voice ID based on SENDER (Gender/Character specific)
-    # Using specific sender map, falling back to a default male voice if unknown
-    voice_id = SENDER_VOICE_MAP.get(sender, "JBFqnCBsd6RMkjVDRZzb")
-    print(f"Using Voice ID: {voice_id} for Sender: {sender}")
-
-    # 3. Generate Audio via ElevenLabs
+    # 2. Hybrid Routing Logic
     try:
-        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-        headers = {
-            "Accept": "audio/mpeg",
-            "Content-Type": "application/json",
-            "xi-api-key": ELEVENLABS_API_KEY
-        }
-        data = {
-            "text": native_text,  # CRITICAL: Sending native script forces authentic accent
-            "model_id": "eleven_multilingual_v2",
-            "voice_settings": {
-                "stability": 0.5,
-                "similarity_boost": 0.75
-            }
-        }
-        
-        eleven_response = requests.post(url, json=data, headers=headers)
-        
-        if eleven_response.status_code != 200:
-             print(f"ElevenLabs Error: {eleven_response.text}")
-             raise HTTPException(status_code=500, detail="ElevenLabs Generation Failed")
-
-        return StreamingResponse(io.BytesIO(eleven_response.content), media_type="audio/mpeg")
+        # If pure English or explicitly English -> ElevenLabs
+        if detected_dialect == 'english':
+             return await generate_elevenlabs_audio(native_text, sender)
+        else:
+             # Hindi, Hinglish, or Mixed -> Cartesia
+             return await generate_cartesia_audio(native_text, sender)
 
     except Exception as e:
-         print(f"Error in TTS: {e}")
-         raise HTTPException(status_code=500, detail=str(e))
+        print(f"Audio Gen Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

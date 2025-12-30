@@ -5,3 +5,4 @@ gTTS
 requests
 python-dotenv
 python-multipart
+cartesia
