@@ -7,8 +7,14 @@ export default function CarPlayDashboard() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    interface Notification {
+        sender: string;
+        message: string;
+        appName: string;
+    }
+
     // Notification Data
-    const notification = {
+    const notification: Notification = {
         sender: 'Rahul',
         message: 'Bhai, kaha pohcha?',
         appName: 'WhatsApp',
