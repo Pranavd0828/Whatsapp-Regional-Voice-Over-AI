@@ -26,7 +26,7 @@ client = Cartesia(api_key=CARTESIA_API_KEY)
 try:
     import google.generativeai as genai
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-pro')
 except ImportError:
     print("Gemini SDK not found or configured correctly.")
     model = None
