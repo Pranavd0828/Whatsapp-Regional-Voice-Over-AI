@@ -44,12 +44,26 @@
 
     <!-- Dashboard Container -->
     <div
-        class="flex w-full max-w-6xl aspect-[16/9] bg-[#1c1c1e] rounded-3xl overflow-hidden shadow-2xl border border-gray-800 relative">
+        class="flex w-full h-full md:h-auto md:w-full md:max-w-6xl md:aspect-[16/9] bg-[#1c1c1e] md:rounded-3xl overflow-hidden shadow-2xl border-none md:border border-gray-800 relative">
+
+        <!-- PORTRAIT MODE WARNING (Visible only on Portrait Mobile) -->
+        <div class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center text-center p-8 md:hidden portrait-warning">
+            <i data-lucide="smartphone" class="w-16 h-16 text-gray-500 mb-4 animate-pulse"></i>
+            <h2 class="text-xl font-bold text-white mb-2">Please Rotate Your Phone</h2>
+            <p class="text-gray-400 text-sm">This demo is designed for a CarPlay landscape experience.</p>
+        </div>
+
+        <style>
+            /* Only show warning in portrait */
+            @media (orientation: landscape) {
+                .portrait-warning { display: none !important; }
+            }
+        </style>
 
         <!-- 1. Sidebar -->
-        <div class="w-24 bg-[#2c2c2e] flex flex-col items-center py-6 space-y-8 border-r border-gray-700 z-20">
+        <div class="w-20 md:w-24 bg-[#2c2c2e] flex flex-col items-center py-6 space-y-8 border-r border-gray-700 z-20">
             <div class="flex flex-col space-y-1">
-                <div class="text-gray-400 text-xs font-medium pl-1">10:45</div>
+                <div class="text-gray-400 text-[10px] md:text-xs font-medium pl-1">10:45</div>
                 <div class="flex px-2 space-x-1">
                     <div class="w-1 h-3 bg-green-500 rounded-full"></div>
                     <div class="w-1 h-4 bg-green-500 rounded-full"></div>
@@ -57,21 +71,21 @@
                 </div>
             </div>
             <!-- Dock Icons -->
-            <div class="flex flex-col space-y-6 w-full items-center">
-                <div class="p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer"><i
-                        data-lucide="map" class="w-8 h-8 text-blue-400"></i></div>
-                <div class="p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer"><i
-                        data-lucide="music" class="w-8 h-8 text-red-400"></i></div>
-                <div class="p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer"><i
-                        data-lucide="phone" class="w-8 h-8 text-green-400"></i></div>
-                <div class="p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer relative">
-                    <i data-lucide="message-circle" class="w-8 h-8 text-green-500"></i>
-                    <div class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-[#2c2c2e]"></div>
+            <div class="flex flex-col space-y-4 md:space-y-6 w-full items-center">
+                <div class="p-2 md:p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer"><i
+                        data-lucide="map" class="w-6 h-6 md:w-8 md:h-8 text-blue-400"></i></div>
+                <div class="p-2 md:p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer"><i
+                        data-lucide="music" class="w-6 h-6 md:w-8 md:h-8 text-red-400"></i></div>
+                <div class="p-2 md:p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer"><i
+                        data-lucide="phone" class="w-6 h-6 md:w-8 md:h-8 text-green-400"></i></div>
+                <div class="p-2 md:p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer relative">
+                    <i data-lucide="message-circle" class="w-6 h-6 md:w-8 md:h-8 text-green-500"></i>
+                    <div class="absolute top-2 right-2 w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full border-2 border-[#2c2c2e]"></div>
                 </div>
             </div>
             <div class="mt-auto">
-                <div class="p-3 rounded-full border-2 border-gray-500"><i data-lucide="grid"
-                        class="w-6 h-6 text-white"></i></div>
+                <div class="p-2 md:p-3 rounded-full border-2 border-gray-500"><i data-lucide="grid"
+                        class="w-5 h-5 md:w-6 md:h-6 text-white"></i></div>
             </div>
         </div>
 
@@ -95,20 +109,20 @@
 
             <!-- UI Overlay -->
             <div
-                class="absolute top-6 left-6 bg-[#1c1c1e]/90 backdrop-blur-md p-4 rounded-2xl border border-gray-700 shadow-xl max-w-xs z-10">
-                <div class="flex items-start space-x-4">
+                class="absolute top-4 left-4 md:top-6 md:left-6 bg-[#1c1c1e]/90 backdrop-blur-md p-3 md:p-4 rounded-2xl border border-gray-700 shadow-xl max-w-[200px] md:max-w-xs z-10">
+                <div class="flex items-start space-x-3 md:space-x-4">
                     <div class="bg-green-600 p-2 rounded-lg"><i data-lucide="navigation"
-                            class="w-8 h-8 text-white transform -rotate-90"></i></div>
+                            class="w-6 h-6 md:w-8 md:h-8 text-white transform -rotate-90"></i></div>
                     <div>
-                        <div class="text-gray-400 text-sm font-medium">Next Turn</div>
-                        <div class="text-white text-2xl font-bold leading-tight">500m</div>
-                        <div class="text-gray-300 text-lg">Turn Left</div>
+                        <div class="text-gray-400 text-xs md:text-sm font-medium">Next Turn</div>
+                        <div class="text-white text-xl md:text-2xl font-bold leading-tight">500m</div>
+                        <div class="text-gray-300 text-sm md:text-lg">Turn Left</div>
                     </div>
                 </div>
             </div>
             <div
-                class="absolute bottom-6 left-6 bg-[#1c1c1e]/90 backdrop-blur-md px-4 py-2 rounded-xl border border-gray-700 shadow-lg z-10">
-                <div class="flex space-x-4 text-sm font-medium">
+                class="absolute bottom-4 left-4 md:bottom-6 md:left-6 bg-[#1c1c1e]/90 backdrop-blur-md px-3 py-2 md:px-4 md:py-2 rounded-xl border border-gray-700 shadow-lg z-10">
+                <div class="flex space-x-3 md:space-x-4 text-xs md:text-sm font-medium">
                     <div class="text-green-500">14 min</div>
                     <div class="text-gray-400">10.2 km</div>
                     <div class="text-white">10:59 ETA</div>
@@ -116,21 +130,21 @@
             </div>
 
             <!-- 3. Action Layer (Notifications) -->
-            <div id="notification-area" class="absolute top-4 left-0 w-full flex flex-col items-center z-50 hidden">
+            <div id="notification-area" class="absolute top-4 left-0 w-full flex flex-col items-center z-50 hidden px-4">
 
                 <!-- Card -->
                 <div onclick="playAudio()"
-                    class="w-full max-w-md bg-[#1c1c1e]/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700/50 flex items-center p-4 space-x-4 cursor-pointer hover:scale-105 transition-transform duration-300 animate-slide-down">
+                    class="w-full max-w-md bg-[#1c1c1e]/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700/50 flex items-center p-3 md:p-4 space-x-3 md:space-x-4 cursor-pointer hover:scale-105 transition-transform duration-300 animate-slide-down">
                     <div
-                        class="w-12 h-12 bg-[#25D366] rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                        <i data-lucide="message-circle" class="w-7 h-7 text-white fill-white"></i>
+                        class="w-10 h-10 md:w-12 md:h-12 bg-[#25D366] rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                        <i data-lucide="message-circle" class="w-6 h-6 md:w-7 md:h-7 text-white fill-white"></i>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex justify-between items-baseline mb-0.5">
-                            <span id="sender-name" class="text-white font-bold text-lg truncate">Sneha</span>
-                            <span class="text-gray-400 text-xs font-medium">Now</span>
+                            <span id="sender-name" class="text-white font-bold text-base md:text-lg truncate">Sneha</span>
+                            <span class="text-gray-400 text-[10px] md:text-xs font-medium">Now</span>
                         </div>
-                        <div id="message-text" class="text-gray-300 text-base truncate leading-snug">Hey, are you free
+                        <div id="message-text" class="text-gray-300 text-sm md:text-base truncate leading-snug">Hey, are you free
                             tonight?</div>
                     </div>
                     <div class="text-gray-400" id="status-icon">
