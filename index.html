@@ -40,14 +40,16 @@
     </style>
 </head>
 
-<body class="text-white">
+<body
+    class="bg-black flex items-center justify-center h-screen w-screen p-0 md:p-8 font-sans antialiased overflow-hidden selection:bg-green-500 selection:text-white">
 
     <!-- Dashboard Container -->
     <div
-        class="flex w-full h-full md:h-auto md:w-full md:max-w-6xl md:aspect-[16/9] bg-[#1c1c1e] md:rounded-3xl overflow-hidden shadow-2xl border-none md:border border-gray-800 relative">
+        class="flex w-screen h-screen md:h-auto md:w-full md:max-w-6xl md:aspect-[16/9] bg-[#1c1c1e] md:rounded-3xl overflow-hidden shadow-2xl border-none md:border border-gray-800 relative">
 
         <!-- PORTRAIT MODE WARNING (Visible only on Portrait Mobile) -->
-        <div class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center text-center p-8 md:hidden portrait-warning">
+        <div
+            class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center text-center p-8 md:hidden portrait-warning">
             <i data-lucide="smartphone" class="w-16 h-16 text-gray-500 mb-4 animate-pulse"></i>
             <h2 class="text-xl font-bold text-white mb-2">Please Rotate Your Phone</h2>
             <p class="text-gray-400 text-sm">This demo is designed for a CarPlay landscape experience.</p>
@@ -56,7 +58,9 @@
         <style>
             /* Only show warning in portrait */
             @media (orientation: landscape) {
-                .portrait-warning { display: none !important; }
+                .portrait-warning {
+                    display: none !important;
+                }
             }
         </style>
 
@@ -78,9 +82,12 @@
                         data-lucide="music" class="w-6 h-6 md:w-8 md:h-8 text-red-400"></i></div>
                 <div class="p-2 md:p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer"><i
                         data-lucide="phone" class="w-6 h-6 md:w-8 md:h-8 text-green-400"></i></div>
-                <div class="p-2 md:p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer relative">
+                <div
+                    class="p-2 md:p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer relative">
                     <i data-lucide="message-circle" class="w-6 h-6 md:w-8 md:h-8 text-green-500"></i>
-                    <div class="absolute top-2 right-2 w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full border-2 border-[#2c2c2e]"></div>
+                    <div
+                        class="absolute top-2 right-2 w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full border-2 border-[#2c2c2e]">
+                    </div>
                 </div>
             </div>
             <div class="mt-auto">
@@ -130,7 +137,8 @@
             </div>
 
             <!-- 3. Action Layer (Notifications) -->
-            <div id="notification-area" class="absolute top-4 left-0 w-full flex flex-col items-center z-50 hidden px-4">
+            <div id="notification-area"
+                class="absolute top-4 left-0 w-full flex flex-col items-center z-50 hidden px-4">
 
                 <!-- Card -->
                 <div onclick="playAudio()"
@@ -141,10 +149,12 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex justify-between items-baseline mb-0.5">
-                            <span id="sender-name" class="text-white font-bold text-base md:text-lg truncate">Sneha</span>
+                            <span id="sender-name"
+                                class="text-white font-bold text-base md:text-lg truncate">Sneha</span>
                             <span class="text-gray-400 text-[10px] md:text-xs font-medium">Now</span>
                         </div>
-                        <div id="message-text" class="text-gray-300 text-sm md:text-base truncate leading-snug">Hey, are you free
+                        <div id="message-text" class="text-gray-300 text-sm md:text-base truncate leading-snug">Hey, are
+                            you free
                             tonight?</div>
                     </div>
                     <div class="text-gray-400" id="status-icon">
