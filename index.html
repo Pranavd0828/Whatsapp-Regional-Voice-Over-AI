@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp CarPlay AI - Demo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #000; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-down { animation: slideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body class="text-white">
+
+    <!-- Dashboard Container -->
+    <div class="flex w-full max-w-6xl aspect-[16/9] bg-[#1c1c1e] rounded-3xl overflow-hidden shadow-2xl border border-gray-800 relative">
+
+        <!-- 1. Sidebar -->
+        <div class="w-24 bg-[#2c2c2e] flex flex-col items-center py-6 space-y-8 border-r border-gray-700 z-20">
+            <div class="flex flex-col space-y-1">
+                <div class="text-gray-400 text-xs font-medium pl-1">10:45</div>
+                <div class="flex px-2 space-x-1">
+                    <div class="w-1 h-3 bg-green-500 rounded-full"></div>
+                    <div class="w-1 h-4 bg-green-500 rounded-full"></div>
+                    <div class="w-1 h-2 bg-green-500 rounded-full"></div>
+                </div>
+            </div>
+            <!-- Dock Icons -->
+            <div class="flex flex-col space-y-6 w-full items-center">
+                <div class="p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer"><i data-lucide="map" class="w-8 h-8 text-blue-400"></i></div>
+                <div class="p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer"><i data-lucide="music" class="w-8 h-8 text-red-400"></i></div>
+                <div class="p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer"><i data-lucide="phone" class="w-8 h-8 text-green-400"></i></div>
+                <div class="p-3 bg-gray-600/30 rounded-xl hover:bg-gray-600/50 transition cursor-pointer relative">
+                    <i data-lucide="message-circle" class="w-8 h-8 text-green-500"></i>
+                    <div class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-[#2c2c2e]"></div>
+                </div>
+            </div>
+            <div class="mt-auto">
+                <div class="p-3 rounded-full border-2 border-gray-500"><i data-lucide="grid" class="w-6 h-6 text-white"></i></div>
+            </div>
+        </div>
+
+        <!-- 2. Main Canvas (Map) -->
+        <div class="flex-1 relative bg-gray-900 overflow-hidden">
+            <!-- Map Placeholder -->
+            <div class="absolute inset-0 bg-[#242f3e] opacity-100">
+                <div class="absolute top-0 left-1/3 w-8 h-full bg-[#3e4c5b] transform -skew-x-12 ring-2 ring-gray-700"></div>
+                <div class="absolute top-1/2 left-0 w-full h-10 bg-[#3e4c5b] transform -rotate-12 ring-2 ring-gray-700"></div>
+                <div class="absolute top-10 right-20 w-48 h-48 bg-[#2a382e] rounded-full opacity-80 blur-xl"></div>
+                <div class="absolute top-0 left-1/3 w-4 h-full bg-blue-500/80 transform -skew-x-12 blur-[1px] shadow-[0_0_20px_rgba(59,130,246,0.5)]"></div>
+                <!-- Navigation Arrow -->
+                <div class="absolute bottom-1/4 left-[32%] p-3 bg-white rounded-full shadow-lg z-10 animate-pulse">
+                    <i data-lucide="navigation" class="w-8 h-8 text-blue-600 fill-blue-600 transform rotate-12"></i>
+                </div>
+            </div>
+
+            <!-- UI Overlay -->
+            <div class="absolute top-6 left-6 bg-[#1c1c1e]/90 backdrop-blur-md p-4 rounded-2xl border border-gray-700 shadow-xl max-w-xs z-10">
+                <div class="flex items-start space-x-4">
+                    <div class="bg-green-600 p-2 rounded-lg"><i data-lucide="navigation" class="w-8 h-8 text-white transform -rotate-90"></i></div>
+                    <div>
+                        <div class="text-gray-400 text-sm font-medium">Next Turn</div>
+                        <div class="text-white text-2xl font-bold leading-tight">500m</div>
+                        <div class="text-gray-300 text-lg">Turn Left</div>
+                    </div>
+                </div>
+            </div>
+            <div class="absolute bottom-6 left-6 bg-[#1c1c1e]/90 backdrop-blur-md px-4 py-2 rounded-xl border border-gray-700 shadow-lg z-10">
+                <div class="flex space-x-4 text-sm font-medium">
+                    <div class="text-green-500">14 min</div>
+                    <div class="text-gray-400">10.2 km</div>
+                    <div class="text-white">10:59 ETA</div>
+                </div>
+            </div>
+
+            <!-- 3. Action Layer (Notifications) -->
+            <div id="notification-area" class="absolute top-4 left-0 w-full flex flex-col items-center z-50 hidden">
+                
+                <!-- Card -->
+                <div onclick="playAudio()" class="w-full max-w-md bg-[#1c1c1e]/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700/50 flex items-center p-4 space-x-4 cursor-pointer hover:scale-105 transition-transform duration-300 animate-slide-down">
+                    <div class="w-12 h-12 bg-[#25D366] rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                        <i data-lucide="message-circle" class="w-7 h-7 text-white fill-white"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-baseline mb-0.5">
+                            <span id="sender-name" class="text-white font-bold text-lg truncate">Sneha</span>
+                            <span class="text-gray-400 text-xs font-medium">Now</span>
+                        </div>
+                        <div id="message-text" class="text-gray-300 text-base truncate leading-snug">Hey, are you free tonight?</div>
+                    </div>
+                    <div class="text-gray-400" id="status-icon">
+                         <div class="p-2 bg-gray-700 rounded-full">
+                            <!-- Play Triangle -->
+                            <div class="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-0.5"></div>
+                         </div>
+                    </div>
+                </div>
+
+                <!-- Next Button -->
+                <button id="next-btn" onclick="nextMessage(event)" class="mt-3 px-6 py-2 bg-gray-700/80 hover:bg-gray-600 text-white text-sm font-medium rounded-full backdrop-blur-md transition-all shadow-lg flex items-center space-x-2 hidden">
+                    <span>Next Message</span>
+                    <div class="w-5 h-5 bg-gray-500 rounded-full flex items-center justify-center text-xs text-black font-bold">1</div>
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Logic -->
+    <script>
+        lucide.createIcons();
+
+        const messages = [
+            { sender: 'Sneha', message: 'Hey, are you free tonight?' },
+            { sender: 'Rahul', message: 'Bhai, kaha pohcha?' }
+        ];
+        let currentIndex = 0;
+        let audio = new Audio('audio.mp3'); 
+
+        // Initial Delay 1.5s
+        setTimeout(() => {
+            document.getElementById('notification-area').classList.remove('hidden');
+        }, 1500);
+
+        function playAudio() {
+            const statusDiv = document.getElementById('status-icon');
+            statusDiv.innerHTML = '<i data-lucide="loader-2" class="w-6 h-6 animate-spin text-green-500"></i>';
+            lucide.createIcons();
+
+            // Fake loading delay
+            setTimeout(() => {
+                statusDiv.innerHTML = '<i data-lucide="volume-2" class="w-6 h-6 animate-pulse text-blue-500"></i>';
+                lucide.createIcons();
+                audio.play();
+
+                audio.onended = () => {
+                    statusDiv.innerHTML = '<div class="p-2 bg-gray-700 rounded-full"><div class="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-0.5"></div></div>';
+                    // Show next button if available
+                    if (currentIndex < messages.length - 1) {
+                        document.getElementById('next-btn').classList.remove('hidden');
+                    }
+                };
+            }, 800);
+        }
+
+        function nextMessage(e) {
+            e.stopPropagation();
+            currentIndex++;
+            const msg = messages[currentIndex];
+            
+            // Hide current
+            const area = document.getElementById('notification-area');
+            area.classList.add('hidden');
+            
+            // Update content
+            document.getElementById('sender-name').textContent = msg.sender;
+            document.getElementById('message-text').textContent = msg.message;
+            document.getElementById('next-btn').classList.add('hidden');
+
+            // Show new
+            setTimeout(() => {
+                area.classList.remove('hidden');
+            }, 300);
+        }
+    </script>
+</body>
+</html>
