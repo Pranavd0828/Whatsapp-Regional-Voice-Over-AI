@@ -2,7 +2,9 @@
 
 ## What we are doing
 
-We are developing a "Code-Switching Audio Engine" for WhatsApp that intelligently reads messages aloud in the sender's native accent and language. This system autonomously switches between a premium English voice and a native Indian accent depending on whether the text is in English, Hindi, or a mix of both (Hinglish). Additionally, we are introducing a "CarPlay Mode" prototype, a distraction-free vehicle interface that allows drivers to listen to and navigate through their message queue without taking their eyes off the road.
+We are developing a **"Code-Switching Audio Engine" for WhatsApp** that serves as an intelligent companion for drivers. This product is not a standalone navigation app; rather, it is a specialized **Voice Integration** designed to work seamlessly within the **Apple CarPlay and Android Auto** ecosystems.
+
+It solves a specific gap: standard voice assistants (Siri/Google Assistant) struggle with mixed-language (Hinglish) messages. Our solution overlays a high-fidelity, region-aware audio layer onto the existing WhatsApp experience, allowing users to listen to and interact with messages in their native accent while keeping their navigation (Google Maps/Apple Maps) active in the background.
 
 ## How we are executing this
 
