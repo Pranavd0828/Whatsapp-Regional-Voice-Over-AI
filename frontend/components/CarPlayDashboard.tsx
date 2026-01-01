@@ -6,6 +6,8 @@ import { Phone, Map, Music, Grid, MessageCircle, Navigation, Loader2, Volume2, M
 export default function CarPlayDashboard() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isVisible, setIsVisible] = useState(false); // Controls 1.5s delay
+    const [currentIndex, setCurrentIndex] = useState(0);
 
     interface Notification {
         sender: string;
@@ -13,11 +15,41 @@ export default function CarPlayDashboard() {
         appName: string;
     }
 
-    // Notification Data
-    const notification: Notification = {
-        sender: 'Rahul',
-        message: 'Bhai, kaha pohcha?',
-        appName: 'WhatsApp',
+    // Interactive Message Queue
+    const messages: Notification[] = [
+        {
+            sender: 'Sneha',
+            message: 'Hey, are you free tonight?', // English -> ElevenLabs
+            appName: 'WhatsApp',
+        },
+        {
+            sender: 'Rahul',
+            message: 'Bhai, kaha pohcha?', // Hindi -> Cartesia
+            appName: 'WhatsApp',
+        }
+    ];
+
+    const currentNotification = messages[currentIndex];
+    const hasNext = currentIndex < messages.length - 1;
+
+    // Trigger Slide-Down Animation after 1.5s
+    React.useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsVisible(true);
+        }, 1500);
+        return () => clearTimeout(timer);
+    }, []);
+
+    const handleNextMessage = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent triggering audio playback
+        setIsPlaying(false);
+        setIsLoading(false);
+        setIsVisible(false); // Reset animation
+
+        setTimeout(() => {
+            setCurrentIndex((prev) => prev + 1);
+            setIsVisible(true);
+        }, 300); // Short delay for visual reset
     };
 
     const handleNotificationClick = async () => {
@@ -31,8 +63,8 @@ export default function CarPlayDashboard() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    text: notification.message,
-                    sender: notification.sender
+                    text: currentNotification.message,
+                    sender: currentNotification.sender
                 }),
             });
 
@@ -60,7 +92,7 @@ export default function CarPlayDashboard() {
     };
 
     return (
-        <div className="flex w-full max-w-6xl aspect-[16/9] bg-[#1c1c1e] rounded-3xl overflow-hidden shadow-2xl border border-gray-800">
+        <div className="flex w-full max-w-6xl aspect-[16/9] bg-[#1c1c1e] rounded-3xl overflow-hidden shadow-2xl border border-gray-800 font-sans">
 
             {/* 1. Sidebar (Fixed Left) */}
             <div className="w-24 bg-[#2c2c2e] flex flex-col items-center py-6 space-y-8 border-r border-gray-700 z-20">
@@ -109,13 +141,13 @@ export default function CarPlayDashboard() {
                     {/* Route */}
                     <div className="absolute top-0 left-1/3 w-4 h-full bg-blue-500/80 transform -skew-x-12 blur-[1px] shadow-[0_0_20px_rgba(59,130,246,0.5)]"></div>
                     {/* Navigation Arrow */}
-                    <div className="absolute bottom-1/4 left-[38%] p-3 bg-white rounded-full shadow-lg z-10 animate-pulse">
-                        <Navigation size={32} className="text-blue-600 fill-blue-600 transform rotate-45" />
+                    <div className="absolute bottom-1/4 left-[32%] p-3 bg-white rounded-full shadow-lg z-10 animate-pulse">
+                        <Navigation size={32} className="text-blue-600 fill-blue-600 transform rotate-12" />
                     </div>
                 </div>
 
                 {/* Navigation UI Overlay */}
-                <div className="absolute top-6 left-6 bg-[#1c1c1e]/90 backdrop-blur-md p-4 rounded-2xl border border-gray-700 shadow-xl max-w-xs">
+                <div className="absolute top-6 left-6 bg-[#1c1c1e]/90 backdrop-blur-md p-4 rounded-2xl border border-gray-700 shadow-xl max-w-xs z-10">
                     <div className="flex items-start space-x-4">
                         <div className="bg-green-600 p-2 rounded-lg">
                             <Navigation size={32} className="text-white transform -rotate-90" />
@@ -128,7 +160,7 @@ export default function CarPlayDashboard() {
                     </div>
                 </div>
 
-                <div className="absolute bottom-6 left-6 bg-[#1c1c1e]/90 backdrop-blur-md px-4 py-2 rounded-xl border border-gray-700 shadow-lg">
+                <div className="absolute bottom-6 left-6 bg-[#1c1c1e]/90 backdrop-blur-md px-4 py-2 rounded-xl border border-gray-700 shadow-lg z-10">
                     <div className="flex space-x-4 text-sm font-medium">
                         <div className="text-green-500">14 min</div>
                         <div className="text-gray-400">10.2 km</div>
@@ -137,46 +169,66 @@ export default function CarPlayDashboard() {
                 </div>
 
                 {/* 3. The Action Layer (Notification Banner) */}
-                <div
-                    onClick={handleNotificationClick}
-                    className={`
-                absolute top-4 right-4 md:right-auto md:left-1/2 md:transform md:-translate-x-1/2 
-                w-full max-w-md bg-[#1c1c1e]/95 backdrop-blur-xl
-                rounded-2xl shadow-2xl border border-gray-700/50 
-                flex items-center p-4 space-x-4 cursor-pointer
-                transition-all duration-500 ease-out hover:scale-105 active:scale-95
-                ${isLoading ? 'animate-pulse ring-2 ring-green-500/50' : 'animate-slide-down'}
-            `}
-                    style={{ animation: 'slideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}
-                >
-                    {/* App Icon */}
-                    <div className="w-12 h-12 bg-[#25D366] rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                        <MessageCircle size={28} className="text-white fill-white" />
-                    </div>
+                {isVisible && (
+                    <div className="absolute top-4 left-0 w-full flex flex-col items-center z-50 pointer-events-none">
+                        {/* Notification Card */}
+                        <div
+                            onClick={handleNotificationClick}
+                            className={`
+                                pointer-events-auto
+                                w-full max-w-md bg-[#1c1c1e]/95 backdrop-blur-xl
+                                rounded-2xl shadow-2xl border border-gray-700/50 
+                                flex items-center p-4 space-x-4 cursor-pointer
+                                transition-all duration-500 ease-out hover:scale-105 active:scale-95
+                                animate-slide-down
+                                ${isLoading ? 'ring-2 ring-green-500/50' : ''}
+                            `}
+                        >
+                            {/* App Icon */}
+                            <div className="w-12 h-12 bg-[#25D366] rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                                <MessageCircle size={28} className="text-white fill-white" />
+                            </div>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-baseline mb-0.5">
-                            <span className="text-white font-bold text-lg truncate">{notification.sender}</span>
-                            <span className="text-gray-400 text-xs font-medium">Now</span>
-                        </div>
-                        <div className="text-gray-300 text-base truncate leading-snug">
-                            {isLoading ? 'Translating & Speaking...' : isPlaying ? 'Playing Audio...' : notification.message}
-                        </div>
-                    </div>
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-baseline mb-0.5">
+                                    <span className="text-white font-bold text-lg truncate">{currentNotification.sender}</span>
+                                    <span className="text-gray-400 text-xs font-medium">Now</span>
+                                </div>
+                                <div className="text-gray-300 text-base truncate leading-snug">
+                                    {isLoading ? 'Translating & Speaking...' : isPlaying ? 'Playing Audio...' : currentNotification.message}
+                                </div>
+                            </div>
 
-                    {/* Status Icon */}
-                    <div className="text-gray-400">
-                        {isLoading ? (
-                            <Loader2 size={24} className="animate-spin text-green-500" />
-                        ) : isPlaying ? (
-                            <Volume2 size={24} className="text-blue-500 animate-pulse" />
-                        ) : (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            {/* Status Icon */}
+                            <div className="text-gray-400">
+                                {isLoading ? (
+                                    <Loader2 size={24} className="animate-spin text-green-500" />
+                                ) : isPlaying ? (
+                                    <Volume2 size={24} className="text-blue-500 animate-pulse" />
+                                ) : (
+                                    // Play Icon Indicator
+                                    <div className="p-2 bg-gray-700 rounded-full">
+                                        <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-0.5"></div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Next Message Button (Below Notification) */}
+                        {hasNext && (
+                            <button
+                                onClick={handleNextMessage}
+                                className="pointer-events-auto mt-3 px-6 py-2 bg-gray-700/80 hover:bg-gray-600 text-white text-sm font-medium rounded-full backdrop-blur-md transition-all shadow-lg flex items-center space-x-2 animate-fade-in"
+                            >
+                                <span>Next Message</span>
+                                <div className="w-5 h-5 bg-gray-500 rounded-full flex items-center justify-center text-xs text-black font-bold">
+                                    {messages.length - 1 - currentIndex}
+                                </div>
+                            </button>
                         )}
                     </div>
-                </div>
-
+                )}
             </div>
         </div>
     );
